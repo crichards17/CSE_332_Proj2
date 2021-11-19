@@ -1,38 +1,57 @@
 package phaseA;
 import providedCode.*;
+import java.util.EmptyStackException;
 
 
 public class GArrayStack<T> implements GStack<T> {
-	
+	private int size;
+	private int head;
+	private T[] stack;
+
 	public GArrayStack() {
-		/**
-		 * You can replace the contents of this class with your GArrayStack 
-		 * implementation from project 1 if you want.		  
-		 */
+		size = 10;
+		//Recommended workaround for initializing a generic array
+		stack = (T[]) new Object[size];
+		head = -1;
 	}
 
 	@Override
 	public boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
+		return head == -1;
 	}
 
 	@Override
 	public void push(T d) {
-		// TODO Auto-generated method stub
-		
+		if (head == size -1) {
+			expandStack();
+		}
+		stack[++head] = d;
+	}
+
+	private void expandStack() {
+		T[] temp = (T[]) new Object[size * 2];
+		//Spec requires manual array copy
+		for (int i = 0; i < size; i++) {
+			temp[i] = stack[i];
+		}
+		size = size * 2;
+		stack = temp;
 	}
 
 	@Override
 	public T pop() {
-		// TODO Auto-generated method stub
-		return null;
+		if (isEmpty()) {
+			throw new EmptyStackException();
+		}
+		return stack[head--];
 	}
 
 	@Override
 	public T peek() {
-		// TODO Auto-generated method stub
-		return null;
+		if (isEmpty()) {
+			throw new EmptyStackException();
+		}
+		return stack[head];
 	}
 }
 
