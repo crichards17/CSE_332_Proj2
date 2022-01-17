@@ -33,7 +33,7 @@ public class Sorter {
     }
     
     public static <E> void heapSort(E[] array, Comparator<E> comparator) {
-        Heap<E> fourHeap = new FourHeap(comparator);
+        Heap<E> fourHeap = new FourHeap<>(comparator);
         for (int i = 1; i < array.length; i++) {
             fourHeap.insert(array[i]);
         }
