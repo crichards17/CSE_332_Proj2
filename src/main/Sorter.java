@@ -1,5 +1,7 @@
 package main;
 import providedCode.Comparator;
+import providedCode.Heap;
+import phaseA.FourHeap;
 
 
 /** 
@@ -31,7 +33,15 @@ public class Sorter {
     }
     
     public static <E> void heapSort(E[] array, Comparator<E> comparator) {
-    	// TODO: To-be implemented
+        Heap<E> fourHeap = new FourHeap(comparator);
+        for (int i = 1; i < array.length; i++) {
+            fourHeap.insert(array[i]);
+        }
+        int j = 0;
+        while(!fourHeap.isEmpty()) {
+            array[j] = fourHeap.deleteMin();
+            j++;
+        }
     }
     
     /**
