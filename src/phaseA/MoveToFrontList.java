@@ -1,6 +1,8 @@
 package phaseA;
 import providedCode.*;
 
+import java.util.NoSuchElementException;
+
 
 /**
  * TODO: REPLACE this comment with your own as appropriate.
@@ -89,8 +91,22 @@ public class MoveToFrontList<E> extends DataCounter<E> {
 
 	@Override
 	public SimpleIterator<DataCount<E>> getIterator() {
-		// TODO Auto-generated method stub
-		return null;
+		return new SimpleIterator<>() {
+			LinkedNode current = front;
+			@Override
+			public DataCount<E> next() {
+				if(!hasNext()) {
+					throw new NoSuchElementException();
+				}
+				DataCount<E> data = new DataCount<E>(current.data, current.count);
+				current = current.next;
+				return data;
+			}
+			@Override
+			public boolean hasNext() {
+				return current != null;
+			}
+		};
 	}
 
 	private class LinkedNode {
