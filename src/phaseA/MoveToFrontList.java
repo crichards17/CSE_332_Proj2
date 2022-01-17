@@ -17,33 +17,92 @@ import providedCode.*;
  * TODO: Develop appropriate JUnit tests for your MoveToFrontList.
  */
 public class MoveToFrontList<E> extends DataCounter<E> {
+	private int size;
+	private LinkedNode front;
+	private Comparator<? super E> comparator;
 
 	
 	public MoveToFrontList(Comparator<? super E> c) {
-		// TODO: To-be implemented
+		size = 0;
+		front = null;
+		comparator = c;
 	}
-	
+
+	// Adds a new node to the list, or increments the count of an existing node
 	@Override
 	public void incCount(E data) {
-		// TODO Auto-generated method stub
+		if(front == null) {
+			front = new LinkedNode(data, null);
+			size++;
+			return;
+		}
+		if (comparator.compare(front.data, data) == 0) {
+			front.count++;
+			return;
+		}
+		LinkedNode pointer = front;
+		while(pointer.next != null) {
+			if (comparator.compare(pointer.next.data, data) == 0) {
+				pointer.next.count++;
+				moveToFront(pointer);
+				return;
+			} else {
+				pointer = pointer.next;
+			}
+		}
+		front = new LinkedNode(data, front);
+		size ++;
+	}
+
+	private void moveToFront(LinkedNode node) {
+		LinkedNode moving = node.next;
+		node.next = moving.next;
+		moving.next = front;
+		front = moving;
 	}
 
 	@Override
 	public int getSize() {
-		// TODO Auto-generated method stub
-		return 0;
+		return size;
 	}
 
 	@Override
 	public int getCount(E data) {
-		// TODO Auto-generated method stub
-		return 0;
+		if(front == null) {
+			return -1;
+		}
+		if (comparator.compare(front.data, data) == 0) {
+			return front.count;
+		}
+		LinkedNode pointer = front;
+		while(pointer.next != null) {
+			if (comparator.compare(pointer.next.data, data) == 0) {
+				int count = pointer.next.count;
+				moveToFront(pointer);
+				return count;
+			} else {
+				pointer = pointer.next;
+			}
+		}
+		return -1;
 	}
 
 	@Override
 	public SimpleIterator<DataCount<E>> getIterator() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	private class LinkedNode {
+		private E data;
+		private int count;
+		private LinkedNode next;
+
+		private LinkedNode(E d, LinkedNode node) {
+			data = d;
+			next = node;
+			count = 1;
+		}
 	}
 
 }
