@@ -3,48 +3,99 @@ import providedCode.*;
 
 
 /**
- * TODO: Replace this comment with your own as appropriate.
- * 1. You may implement any kind of HashTable discussed in class; the
- *    only restriction is that it should not restrict the size of the
- *    input domain (i.e., it must accept any key) or the number of
- *    inputs (i.e., it must grow as necessary).
- * 2. You should use this implementation with the -h option.
- * 3. Your HashTable should rehash as appropriate (use load factor as
- *    shown in the class).
- * 4. To use your HashTable for WordCount, you will need to be able to
- *    hash strings. Implement your own hashing strategy using charAt
- *    and length. Do NOT use Java's hashCode method.
- * 5. HashTable should be able to grow at least up to 200,000. We are
- *    not going to test input size over 200,000 so you can stop
- *    resizing there (of course, you can make it grow even larger but
- *    it is not necessary).
- * 6. We suggest you to hard code the prime numbers. You can use this
- *    list: http://primes.utm.edu/lists/small/100000.txt NOTE: Make
- *    sure you only hard code the prime numbers that are going to be
- *    used. Do NOT copy the whole list!
+ * 1. Hash table will accept any key, and any number of inputs (up to >200,000 capacity)
+ * 2. Rehashes when it reaches >75% load factor
+ * 3. Able to hash strings for use in WordCount
+ * 4. List of primes are pre-seeded
+
  * TODO: Develop appropriate JUnit tests for your HashTable.
  */
 public class HashTable<E> extends DataCounter<E> {
 
-	
+	private static final double LOAD_MAX = 0.75;
+	private static final int[] primeList = {53, 157, 269, 503, 769, 1321, 2089, 5051, 7177, 11939, 37119, 91193, 115249, 181081, 207307};
+
+	private HashBucket[] hashTable;
+	private Hasher<E> hasher;
+	private Comparator<? super E> comparator;
+	private int primesIndex;
+	private int size;
+
+	@SuppressWarnings("unchecked")
 	public HashTable(Comparator<? super E> c, Hasher<E> h) {
-		// TODO: To-be implemented
+		primesIndex = 0;
+		hashTable = (HashBucket[]) new HashTable.HashBucket[primeList[primesIndex]];
+		hasher = h;
+		comparator = c;
+		size = 0;
 	}
 	
 	@Override
 	public void incCount(E data) {
-		// TODO Auto-generated method stub
+		if( (double) getSize() / primeList[primesIndex] > LOAD_MAX ){
+			resize();
+		}
+		int hashedIndex = hasher.hash(data) % hashTable.length;
+		HashBucket checkBucket = hashTable[hashedIndex];
+		if (checkBucket == null) {
+			hashTable[hashedIndex] = new HashBucket(data);
+		} else {
+			boolean found = false;
+			while (checkBucket.next != null) {
+				if (comparator.compare(data, checkBucket.next.data) == 0) {
+					found = true;
+					checkBucket.next.count++;
+					break;
+				}
+			}
+			if (!found) {
+				checkBucket.next = new HashBucket(data);
+			}
+		}
+		size++;
 	}
+
+	// Resizes and rehashes the table.
+	// Uses the next prime for table size, and copies and rehashes all entries
+	@SuppressWarnings("unchecked")
+	private void resize() {
+		primesIndex++;
+		HashBucket[] temp = (HashBucket[]) new HashTable.HashBucket[primeList[primesIndex]];
+		for (HashBucket copyBucket : hashTable) {
+			while (copyBucket != null) {
+				int newHashIndex = hasher.hash(copyBucket.data) % temp.length;
+				HashBucket checkBucket = temp[newHashIndex];
+				if (checkBucket == null) {
+					temp[newHashIndex] = copyBucket;
+				} else {
+					while (checkBucket.next != null) {
+						checkBucket = checkBucket.next;
+					}
+					checkBucket.next = copyBucket;
+				}
+				copyBucket = copyBucket.next;
+			}
+		}
+		hashTable = temp;
+	}
+
 
 	@Override
 	public int getSize() {
-		// TODO Auto-generated method stub
-		return 0;
+		return size;
 	}
 
 	@Override
+	// Returns the count of a given datum in the table.
+	// Returns a 0 if the data is not present.
 	public int getCount(E data) {
-		// TODO Auto-generated method stub
+		HashBucket checkBucket = hashTable[hasher.hash(data) % hashTable.length];
+		while (checkBucket != null) {
+			if (comparator.compare(data, checkBucket.data) == 0) {
+				return checkBucket.count;
+			}
+			checkBucket = checkBucket.next;
+		}
 		return 0;
 	}
 
@@ -54,4 +105,20 @@ public class HashTable<E> extends DataCounter<E> {
 		return null;
 	}
 
+	private class HashBucket {
+		protected HashBucket next;
+		protected E data;
+		protected int count;
+
+		public HashBucket(E d, HashBucket n, int c) {
+			data = d;
+			next = n;
+			count = c;
+		}
+
+		// For constructing net-new buckets with null next and count of 1
+		public HashBucket(E d) {
+			this(d, null, 1);
+		}
+	}
 }
