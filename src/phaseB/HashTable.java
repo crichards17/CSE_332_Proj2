@@ -1,23 +1,27 @@
 package phaseB;
 import providedCode.*;
 
+import java.util.NoSuchElementException;
+
 
 /**
  * 1. Hash table will accept any key, and any number of inputs (up to >200,000 capacity)
  * 2. Rehashes when it reaches >75% load factor
  * 3. Able to hash strings for use in WordCount
  * 4. List of primes are pre-seeded
+ * 5. Uses separate chaining for collision
 
  * TODO: Develop appropriate JUnit tests for your HashTable.
  */
 public class HashTable<E> extends DataCounter<E> {
 
 	private static final double LOAD_MAX = 0.75;
-	private static final int[] primeList = {53, 157, 269, 503, 769, 1321, 2089, 5051, 7177, 11939, 37119, 91193, 115249, 181081, 207307};
+	private static final int[] primeList = {53, 157, 269, 503, 769, 1321, 2089, 5051, 7177,
+			11939, 37119, 91193, 115249, 181081, 207307};
 
 	private HashBucket[] hashTable;
-	private Hasher<E> hasher;
-	private Comparator<? super E> comparator;
+	private final Hasher<E> hasher;
+	private final Comparator<? super E> comparator;
 	private int primesIndex;
 	private int size;
 
@@ -101,8 +105,29 @@ public class HashTable<E> extends DataCounter<E> {
 
 	@Override
 	public SimpleIterator<DataCount<E>> getIterator() {
-		// TODO Auto-generated method stub
-		return null;
+		return new SimpleIterator<DataCount<E>>() {
+
+			private HashBucket currentBucket = null;
+			private int currentIndex = -1;
+			private int parsed = 0;
+
+			public boolean hasNext() {
+				return parsed < size;
+			}
+
+			public DataCount<E> next() {
+				if (!hasNext()) {
+					throw new NoSuchElementException("No elements remaining in Iterator");
+				}
+				while (currentBucket == null) {
+					currentBucket = hashTable[currentIndex++];
+				}
+				HashBucket returnBucket = currentBucket;
+				currentBucket = currentBucket.next;
+				parsed++;
+				return new DataCount<E>(returnBucket.data, returnBucket.count);
+			}
+		};
 	}
 
 	private class HashBucket {
